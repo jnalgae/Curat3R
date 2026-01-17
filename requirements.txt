@@ -1,0 +1,33 @@
+# Core server
+flask==3.0.0
+flask-cors==4.0.0
+werkzeug==3.0.1
+
+# Scientific / image processing
+numpy>=1.24
+Pillow>=9.5
+opencv-python-headless>=4.7.0
+imageio>=2.31
+scikit-image>=0.20
+tqdm>=4.64
+
+# 3D / mesh utilities
+trimesh>=3.22
+
+# CLIP (install from GitHub)
+git+https://github.com/openai/CLIP.git
+
+# Hugging Face / transformers
+transformers>=4.30
+huggingface-hub>=0.16
+safetensors>=0.3
+
+# PyTorch: recommended to install the correct wheel for your CUDA version
+# Example (CUDA 12.9 / replace with matching version):
+# pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129
+torch>=2.1.0
+torchvision>=0.16.0
+
+# Optional / performance (may require manual installation)
+# xformers (install a matching wheel for your CUDA) - improves attention backend
+# accelerate (optional)
