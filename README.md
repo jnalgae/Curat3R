@@ -77,7 +77,7 @@ Curat3R/
 ## ⚙️ 시작 가이드 (Getting Started)
 
 > **⚠️ 시스템 요구사항**
-
+> 
 > 본 프로젝트는 **NVIDIA RTX 5090 (24GB+ VRAM)** 및 **Linux (Ubuntu/WSL2)** 환경에서 테스트되었습니다. 윈도우 네이티브 환경에서는 경로 설정에 주의가 필요합니다.
 
 ### 1. 외부 리소스 및 모델 설정 (Prerequisites)
@@ -106,3 +106,63 @@ SPAR3D_ROOT = "/home/user/projects/stable-point-aware-3d"
 TRELLIS_ENV = "/home/user/miniconda3/envs/trellis311/bin/python"
 TRELLIS_ROOT = "/home/user/projects/TRELLIS.2"
 ```
+---
+
+### 3. 서버 실행 (Run)
+
+**Frontend (Next.js)**
+```bash
+cd src
+npm install
+npm run dev
+# 브라우저 접속: http://localhost:3000
+```
+
+**Pipeline Server (Flask)**
+```bash
+cd pipeline
+
+# 가상환경 활성화 (메인 서버용)
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 서버 실행
+python pipeline_server.py
+```
+
+### 환경 변수 (Environment Variables)
+Hugging Face의 비공개 모델(Gated Model)에 접근해야 할 경우, 아래 환경 변수를 설정하세요.
+```bash
+export HF_TOKEN="your_huggingface_token"
+```
+
+---
+
+## 📡 API 명세 (API Endpoints)
+
+| Method | Endpoint | 설명 | 파라미터 |
+|---|---|---|---|
+| **POST** | `/api/pipeline/filter` | 이미지 적합성 판별 (CLIP) | `form-data`: image |
+| **POST** | `/api/pipeline/reconstruct/<task_id>` | 3D 생성 요청 (Fast/Quality) | JSON: `{ "model": "fast" \| "quality" }` |
+| **GET** | `/api/pipeline/download/<task_id>` | 결과물(glb) 다운로드 | - |
+
+---
+
+## 🧩 모델 크레딧 (Credits)
+
+이 프로젝트는 다음의 오픈소스 모델들을 활용하여 개발되었습니다.
+
+1.  **SPAR3D (Stable Point-Aware 3D)** by Stability AI
+    - Fast Mode의 핵심 모델로, 단일 이미지에서 포인트 클라우드 기반으로 메쉬를 생성합니다.
+2.  **Trellis** by Microsoft Research
+    - Quality Mode의 핵심 모델로, 고품질의 3D 지오메트리와 텍스처를 생성합니다.
+3.  **CLIP** by OpenAI
+    - 이미지의 의미론적 분석 및 필터링에 사용됩니다.
+4.  **Transparent Background**
+    - SPAR3D 전처리 단계에서 객체 누끼(배경 제거)를 위해 사용됩니다.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License.
