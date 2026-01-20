@@ -158,7 +158,5 @@ export HF_TOKEN="your_huggingface_token"
     - Quality Mode의 핵심 모델로, 고품질의 3D 지오메트리와 텍스처를 생성합니다.
 3.  **CLIP** by OpenAI
     - 이미지의 의미론적 분석 및 필터링에 사용됩니다.
-4.  **Transparent Background**
-    - SPAR3D 전처리 단계에서 객체 누끼(배경 제거)를 위해 사용됩니다.
 
 ---
