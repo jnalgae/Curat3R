@@ -41,6 +41,43 @@
 
 ---
 
+graph LR
+    %% 노드 정의
+    Upload[🖼️ Image Uploading]
+    CLIP[🔍 CLIP<br/>Image Filtering]
+    Select{Model<br/>Selection}
+    
+    subgraph Reconstruction [3D Reconstruction]
+        direction TB
+        SPAR[⚡ SPAR 3D<br/>(Fast)]
+        Trellis[💎 TRELLIS.2<br/>(Quality)]
+    end
+    
+    Feed[📂 User-Custom<br/>Feed]
+    Gallery[🏛️ 3D Gallery<br/>Three.js / WebGL]
+
+    %% 흐름 연결
+    Upload --> CLIP
+    CLIP -- Accept --> Select
+    CLIP -- Reject --> Upload
+    CLIP -.->|Human Override| Select
+    
+    Select -->|Fast| SPAR
+    Select -->|Quality| Trellis
+    
+    SPAR --> Feed
+    Trellis --> Feed
+    Feed --> Gallery
+
+    %% 스타일링 (파란색/흰색 테마)
+    classDef nodeStyle fill:#fff,stroke:#333,stroke-width:2px,color:#333;
+    classDef blueFill fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#0D47A1;
+    classDef darkFill fill:#263238,stroke:#333,stroke-width:2px,color:#fff;
+    
+    class Upload,Feed nodeStyle;
+    class CLIP,SPAR,Trellis,Gallery blueFill;
+    class Select darkFill;
+
 ## 🛠 기술 스택 (Tech Stack)
 
 | 분류 | 기술 |
