@@ -41,6 +41,9 @@
 
 ---
 
+## 🏗️ 시스템 아키텍처 (Pipeline Architecture)
+
+```mermaid
 graph LR
     %% 노드 정의
     Upload[🖼️ Image Uploading]
@@ -69,7 +72,7 @@ graph LR
     Trellis --> Feed
     Feed --> Gallery
 
-    %% 스타일링 (파란색/흰색 테마)
+    %% 스타일링
     classDef nodeStyle fill:#fff,stroke:#333,stroke-width:2px,color:#333;
     classDef blueFill fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#0D47A1;
     classDef darkFill fill:#263238,stroke:#333,stroke-width:2px,color:#fff;
@@ -77,6 +80,7 @@ graph LR
     class Upload,Feed nodeStyle;
     class CLIP,SPAR,Trellis,Gallery blueFill;
     class Select darkFill;
+```
 
 ## 🛠 기술 스택 (Tech Stack)
 
