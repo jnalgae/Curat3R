@@ -7,7 +7,6 @@
 
 ![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask&logoColor=white)
 ![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Hugging_Face-yellow)
-![Microsoft Research](https://img.shields.io/badge/Microsoft%20Research-0078D4?logo=microsoft&logoColor=white) 
 ![NVIDIA](https://img.shields.io/badge/NVIDIA-CUDA_12.1-76B900?logo=nvidia&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-CLIP-412991?logo=openai&logoColor=white)
 ![SPAR3D](https://img.shields.io/badge/Stability_AI-SPAR3D-3B0892?logo=stabilityai&logoColor=white)
