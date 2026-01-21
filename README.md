@@ -110,7 +110,7 @@ TRELLIS_ROOT = "/home/user/projects/TRELLIS.2"
 
 ### 3. 서버 실행 (Run)
 
-**🖥️ Frontend (Next.js)**
+** Frontend (Next.js)**
 ```bash
 cd src
 npm install
@@ -118,7 +118,7 @@ npm run dev
 # 브라우저 접속: http://localhost:3000
 ```
 
-**🧪 Pipeline Server (Flask)**
+** Pipeline Server (Flask)**
 ```bash
 cd pipeline
 
@@ -131,7 +131,7 @@ pip install -r requirements.txt
 python pipeline_server.py
 ```
 
-### 🔐 환경 변수 (Environment Variables)
+### 환경 변수 (Environment Variables)
 Hugging Face의 비공개 모델(Gated Model)에 접근해야 할 경우, 아래 환경 변수를 설정하세요.
 ```bash
 export HF_TOKEN="your_huggingface_token"
@@ -153,9 +153,9 @@ export HF_TOKEN="your_huggingface_token"
 이 프로젝트는 다음의 오픈소스 모델들을 활용하여 개발되었습니다.
 
 1.  **SPAR3D (Stable Point-Aware 3D)** by Stability AI
-    - Fast Mode의 핵심 모델로, 단일 이미지에서 포인트 클라우드 기반으로 메쉬를 생성합니다.
+    - Fast Mode의 핵심 모델로, 단일 이미지에서 Point Cloud 기반으로 Mesh를 생성합니다.
 2.  **Trellis.2** by Microsoft Research
-    - Quality Mode의 핵심 모델로, 고품질의 3D 지오메트리와 텍스처를 생성합니다.
+    - Quality Mode의 핵심 모델로, 고품질의 3D Geometry와 Texture를 생성합니다.
 3.  **CLIP** by OpenAI
     - 이미지의 의미론적 분석 및 필터링에 사용됩니다.
 
