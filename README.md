@@ -165,7 +165,7 @@ TRELLIS_ROOT = "/home/user/projects/TRELLIS.2"
 
 ### 3. 서버 실행 (Run)
 
-**Frontend (Next.js)**
+** Frontend (Next.js)**
 ```bash
 cd src
 npm install
@@ -173,7 +173,7 @@ npm run dev
 # 브라우저 접속: http://localhost:3000
 ```
 
-**Pipeline Server (Flask)**
+** Pipeline Server (Flask)**
 ```bash
 cd pipeline
 
@@ -216,25 +216,18 @@ export HF_TOKEN="your_huggingface_token"
 
 ---
 
-## 🖼️ 데모
+## 🖼️ 데모 (Demo)
 
 ### CLIP 필터링 (Image Filtering)
 <img src="./demo_images/filtering/1.png" width="400" alt="CLIP Filtering Example 1" />
 <img src="./demo_images/filtering/2.png" width="400" alt="CLIP Filtering Example 2" />
 
-### SPAR3D - 빠른 생성 모드 (Fast Mode)
-<img src="./demo_images/spar3d/1.png" width="400" alt="SPAR3D Result 1" />
-<img src="./demo_images/spar3d/2.png" width="400" alt="SPAR3D Result 2" />
-
-### Trellis.2 - 고품질 생성 모드 (Quality Mode)
-<img src="./demo_images/trellis.2/1.png" width="400" alt="Trellis.2 Result 1" />
-<img src="./demo_images/trellis.2/2.png" width="400" alt="Trellis.2 Result 2" />
+### 3D 생성 결과
+<img src="./demo_images/car.png" width="400" alt="SPAR3D Result" />
+<img src="./demo_images/robot.png" width="400" alt="Trellis.2 Result" />
 
 ### 웹 인터페이스 (Web Interface)
 <img src="./demo_images/web/1.png" width="400" alt="Web Interface 1" />
 <img src="./demo_images/web/2.png" width="400" alt="Web Interface 2" />
-
-### 데모 영상 (Demo Video)
-[![Curat3R Demo](https://img.youtube.com/vi/ptxr5rqzewE/0.jpg)](https://youtu.be/ptxr5rqzewE)
 
 ---
