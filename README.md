@@ -10,7 +10,7 @@
 ![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Hugging_Face-yellow)
 ![OpenAI](https://img.shields.io/badge/OpenAI-CLIP-412991?logo=openai&logoColor=white)
 ![NVIDIA](https://img.shields.io/badge/NVIDIA-CUDA_12.1-76B900?logo=nvidia&logoColor=white)
-![Microsoft Research](https://img.shields.io/badge/Microsoft%20Research-0078D4?logo=microsoft&logoColor=white)
+![Microsoft](https://img.shields.io/badge/Microsoft-666666?logo=microsoft&logoColor=white)
 > **단 한 장의 사진으로 소중한 물건을 3D 디지털 아티팩트로 복원하여 영구 소장하는 웹 서비스**
 
 *ToBig's 21th Conference Computer Vision Project*
