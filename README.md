@@ -1,8 +1,17 @@
 # Curat3R: 나만의 3D 박물관 만들기 (Make Your Own 3D Museum)
 > 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.1-red?logo=pytorch&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.1.0-EE4C2C?logo=pytorch&logoColor=white)
+
 ![Next.js](https://img.shields.io/badge/Next.js-14.0-black?logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-18.0-61DAFB?logo=react&logoColor=black)
+![Three.js](https://img.shields.io/badge/Three.js-R3F-black?logo=three.js&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?logo=tailwind-css&logoColor=white)
+
+![Flask](https://img.shields.io/badge/Flask-3.0-000000?logo=flask&logoColor=white)
+![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Hugging_Face-yellow)
+![OpenAI](https://img.shields.io/badge/OpenAI-CLIP-412991?logo=openai&logoColor=white)
+![NVIDIA](https://img.shields.io/badge/NVIDIA-CUDA_12.1-76B900?logo=nvidia&logoColor=white)
 > **단 한 장의 사진으로 소중한 물건을 3D 디지털 아티팩트로 복원하여 영구 소장하는 웹 서비스**
 
 *ToBig's 21th Conference Computer Vision Project*
