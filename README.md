@@ -5,7 +5,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-14.0-black?logo=next.js&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.1-red?logo=pytorch&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 *ToBig's 21th Conference Computer Vision Project*
 
