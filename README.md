@@ -216,7 +216,7 @@ export HF_TOKEN="your_huggingface_token"
 
 ---
 
-## 🖼️ 데모 갤러리 (Demo Gallery)
+## 🖼️ 데모
 
 ### CLIP 필터링 (Image Filtering)
 <img src="./demo_images/filtering/1.png" width="400" alt="CLIP Filtering Example 1" />
@@ -233,5 +233,8 @@ export HF_TOKEN="your_huggingface_token"
 ### 웹 인터페이스 (Web Interface)
 <img src="./demo_images/web/1.png" width="400" alt="Web Interface 1" />
 <img src="./demo_images/web/2.png" width="400" alt="Web Interface 2" />
+
+### 데모 영상 (Demo Video)
+[![Video Label](http://img.youtube.com/vi/ptxr5rqzewE/0.jpg)](https://youtu.be/ptxr5rqzewE)
 
 ---
