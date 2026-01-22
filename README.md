@@ -236,6 +236,8 @@ export HF_TOKEN="your_huggingface_token"
 ---
 
 ## 데모 영상 (Demo Video)
-[![Curat3R Demo](https://img.youtube.com/vi/ptxr5rqzewE/0.jpg)](https://youtu.be/ptxr5rqzewE)
+<a href="https://youtu.be/ptxr5rqzewE">
+  <img src="https://img.youtube.com/vi/ptxr5rqzewE/0.jpg" width="800">
+</a>
 
 ---
