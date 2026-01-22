@@ -224,8 +224,10 @@ export HF_TOKEN="your_huggingface_token"
 <img src="./demo_images/filtering/4.png" width="600" alt="CLIP Filtering Example 2" />
 
 ### 3D 생성 결과
-<img src="./demo_images/car.png" width="800" alt="SPAR3D Result" />
-<img src="./demo_images/robot.png" width="800" alt="Trellis.2 Result" />
+<img src="./demo_images/example1.png" width="800" alt="Results" />
+<img src="./demo_images/example2.png" width="800" alt="Results" />
+<img src="./demo_images/car.png" width="800" alt="Car example" />
+<img src="./demo_images/robot.png" width="800" alt="Robot example" />
 
 ### 웹 인터페이스 (Web Interface)
 <img src="./demo_images/web/1.png" width="600" alt="Web Interface 1" />
