@@ -25,20 +25,18 @@ export default function ArchiveCard({ archive }: ArchiveCardProps) {
 
   const isModel = archive.fileType === 'model';
 
-  // ✅ [추가됨] 내용(Content)에서 모델명 감지 로직
-  // (만약 DB에 별도 컬럼이 있다면 archive.modelName 등으로 교체하시면 됩니다)
   const getModelBadge = () => {
     const content = archive.content?.toLowerCase() || '';
     
     if (content.includes('trellis')) {
       return { 
         text: '고급모델', 
-        style: 'bg-indigo-100/90 text-indigo-600 border-indigo-200' // 고품질: 보라색/인디고
+        style: 'bg-indigo-100/90 text-indigo-600 border-indigo-200' 
       };
     } else if (content.includes('stable') || content.includes('fast')) {
       return { 
         text: '일반모델', 
-        style: 'bg-emerald-100/90 text-emerald-600 border-emerald-200' // 빠른생성: 초록색/에메랄드
+        style: 'bg-emerald-100/90 text-emerald-600 border-emerald-200' 
       };
     }
     return null;
@@ -53,14 +51,12 @@ export default function ArchiveCard({ archive }: ArchiveCardProps) {
         {/* 썸네일 영역 */}
         <div className="aspect-square relative overflow-hidden bg-slate-50">
           
-          {/* ✅ [추가됨] 왼쪽 상단: 모델명 뱃지 */}
           {modelBadge && (
             <div className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm backdrop-blur-md border ${modelBadge.style}`}>
               {modelBadge.text}
             </div>
           )}
 
-          {/* 오른쪽 상단: 파일 타입 뱃지 (기존) */}
           <div className={`absolute top-3 right-3 z-10 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm backdrop-blur-md border ${
             isModel 
               ? 'bg-cyan-100/90 text-cyan-600 border-cyan-200' 
@@ -98,8 +94,13 @@ export default function ArchiveCard({ archive }: ArchiveCardProps) {
             <h3 className="font-black text-slate-800 mb-1.5 truncate text-lg group-hover:text-blue-600 transition-colors">
               {archive.title}
             </h3>
+            
+            {/* ⭐️ [수정] 기본 문구 제거: 내용이 없으면 그냥 빈 문자열("") 출력 */}
             <p className="text-sm text-slate-400 line-clamp-2 leading-relaxed h-10 font-medium">
-              {archive.content || "기록된 설명이 없습니다."}
+              {archive.content 
+                ? archive.content.replace(/\[\s*Model\s*:.*?\]/gi, '').trim() 
+                : "" 
+              }
             </p>
           </div>
           

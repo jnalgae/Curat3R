@@ -3,7 +3,7 @@
 import { useState, useEffect, ChangeEvent, FormEvent, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { profileService } from '@/services/archiveService';
-import Link from 'next/link'; // 1. Link 컴포넌트 추가
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -109,7 +109,6 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        {/* 로딩 스피너: 오렌지 -> 블루 변경 */}
         <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
         <p className="text-slate-400 font-medium">프로필 불러오는 중...</p>
       </div>
@@ -117,10 +116,9 @@ export default function ProfilePage() {
   }
 
   return (
-    // 배경 및 선택 색상: 오렌지 -> 블루/스카이 변경
     <div className="min-h-screen bg-slate-50 relative selection:bg-blue-100 selection:text-blue-900 pb-20">
       
-      {/* Background Effect (홈 화면과 통일된 블루 톤) */}
+      {/* Background Effect */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-200/20 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-100/30 rounded-full blur-[120px]" />
@@ -130,7 +128,6 @@ export default function ProfilePage() {
         
         {/* Header */}
         <div className="text-center mb-10">
-          {/* 2. 로고에 홈 링크 적용 및 그라데이션 변경 (블루 계열) */}
           <Link href="/" className="relative inline-block hover:scale-105 transition-transform duration-300 cursor-pointer group">
             <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 bg-clip-text text-transparent mb-3 pb-1">
               Curat3R
@@ -142,7 +139,6 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* 카드 그림자: 오렌지 -> 블루 */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-500/5 border border-white/50 overflow-hidden">
           
           <form onSubmit={handleSubmit}>
@@ -154,7 +150,6 @@ export default function ProfilePage() {
                   style={{ backgroundImage: `url(${backgroundPreview})` }}
                 />
               ) : (
-                // 기본 배경: 오렌지 -> 시원한 블루/시안 그라데이션
                 <div className="w-full h-full bg-gradient-to-r from-blue-100 to-cyan-100 flex items-center justify-center text-blue-300">
                   <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
@@ -225,8 +220,8 @@ export default function ProfilePage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="당신의 이름을 입력하세요"
-                    // Focus Ring: 오렌지 -> 블루 변경
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-slate-50 focus:bg-white"
+                    // [수정 포인트] text-slate-900: 글자색 진하게 / placeholder-slate-400: 도움말 색상
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-slate-50 focus:bg-white text-slate-900 placeholder-slate-400"
                     required
                   />
                 </div>
@@ -240,8 +235,8 @@ export default function ProfilePage() {
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="자신을 소개하는 한 줄을 작성해보세요"
-                    // Focus Ring: 오렌지 -> 블루 변경
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-slate-50 focus:bg-white"
+                    // [수정 포인트] text-slate-900: 글자색 진하게
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-slate-50 focus:bg-white text-slate-900 placeholder-slate-400"
                   />
                 </div>
 
@@ -257,7 +252,6 @@ export default function ProfilePage() {
                   </button>
                   <button
                     type="submit"
-                    // 저장 버튼: 오렌지 그라데이션 -> 블루/인디고 그라데이션
                     className="flex-1 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-lg hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     disabled={saving}
                   >

@@ -125,7 +125,7 @@ export default function UploadWithPipelinePage() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const modelName = selectedModel === 'quality' ? 'Trellis (Quality)' : 'SPAR3D (Fast)';
+    const modelName = selectedModel === 'quality' ? 'Trellis.2 (Quality)' : 'SPAR3D (Fast)';
     const estimatedTime = selectedModel === 'quality' ? '5-10분' : '1-3분';
     setProgressMessage(`${modelName} 모델로 3D 모델 생성 중...`);
     

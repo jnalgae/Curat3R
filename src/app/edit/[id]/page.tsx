@@ -70,7 +70,7 @@ export default function EditPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
         <p className="text-slate-400 font-medium">기록을 불러오는 중...</p>
       </div>
     );
@@ -79,12 +79,12 @@ export default function EditPage() {
   if (!archive) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 relative selection:bg-orange-200 selection:text-orange-900 pb-20">
+    <div className="min-h-screen bg-slate-50 relative selection:bg-blue-100 selection:text-blue-900 pb-20">
       
-      {/* Background Effect (통일된 배경) */}
+      {/* Background Effect */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-200/30 rounded-full blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-amber-100/40 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-cyan-100/40 rounded-full blur-[120px]" />
       </div>
 
       <div className="relative max-w-3xl mx-auto px-4 py-12 z-10">
@@ -92,24 +92,24 @@ export default function EditPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="relative inline-block">
-            <h1 className="text-5xl font-bold tracking-tighter bg-gradient-to-r from-red-600 via-orange-500 to-rose-400 bg-clip-text text-transparent mb-3">
+            <h1 className="text-5xl font-black tracking-tighter bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-3">
               Curat3R
             </h1>
             <span className="absolute -top-1 -right-5 text-2xl animate-pulse">✏️</span>
           </div>
           <p className="text-slate-600 text-lg font-medium">
-            기록된 추억을 <span className="text-orange-600 font-bold">수정</span>합니다
+            기록된 추억을 <span className="text-blue-600 font-bold">수정</span>합니다
           </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-orange-500/5 border border-white/50 overflow-hidden p-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl shadow-blue-500/5 border border-white/50 overflow-hidden p-8">
           
           <form onSubmit={handleSubmit} className="space-y-8">
             
             {/* 1. 파일 정보 (읽기 전용 카드) */}
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
-                archive.fileType === 'model' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'
+                archive.fileType === 'model' ? 'bg-blue-100 text-blue-600' : 'bg-indigo-100 text-indigo-600'
               }`}>
                 {archive.fileType === 'model' ? '📦' : '🖼️'}
               </div>
@@ -134,7 +134,8 @@ export default function EditPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="제목을 입력하세요"
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all bg-white"
+                  // [수정] text-slate-900 추가하여 글자색 진하게 설정
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all bg-white text-slate-900 placeholder-slate-400"
                   required
                 />
               </div>
@@ -148,7 +149,8 @@ export default function EditPage() {
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="내용을 작성하세요..."
                   rows={8}
-                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all resize-none bg-white leading-relaxed"
+                  // [수정] text-slate-900 추가하여 글자색 진하게 설정
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all resize-none bg-white leading-relaxed text-slate-900 placeholder-slate-400"
                 />
               </div>
             </div>
@@ -165,7 +167,7 @@ export default function EditPage() {
               </button>
               <button
                 type="submit"
-                className="flex-1 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-orange-600 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex-1 py-4 rounded-xl font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-lg hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 disabled={saving}
               >
                 {saving ? '저장 중...' : '✅ 수정 완료'}

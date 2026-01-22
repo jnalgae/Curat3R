@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Archive, Folder } from '@/lib/db';
 import { archiveService } from '@/services/archiveService';
@@ -29,10 +29,21 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [currentFolderTitle, setCurrentFolderTitle] = useState<string>('');
   const [currentFolderCount, setCurrentFolderCount] = useState<number>(0);
+  
+  // Object URL cleanup을 위한 ref
+  const thumbnailUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
     loadData();
   }, [currentFolderId]);
+
+  // Cleanup: 컴포넌트 unmount 시 모든 Object URL 해제
+  useEffect(() => {
+    return () => {
+      thumbnailUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      thumbnailUrlsRef.current = [];
+    };
+  }, []);
 
   useEffect(() => {
     // Fetch folder title and count when entering a folder
@@ -58,6 +69,10 @@ export default function HomePage() {
   const loadData = async () => {
     setLoading(true);
     try {
+      // 이전 Object URL들 정리
+      thumbnailUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+      thumbnailUrlsRef.current = [];
+
       // 1. 현재 파일 로드
       const archiveData = await archiveService.getAllArchives(currentFolderId);
       setArchives(archiveData);
@@ -70,12 +85,14 @@ export default function HomePage() {
           const folderArchives = await archiveService.getAllArchives(f.id);
           // 썸네일 url 생성 (최대 3개)
           const thumbnails: string[] = folderArchives.slice(0, 3).map(a => {
+            let url = '';
             if (a.fileType === 'image') {
-              return URL.createObjectURL(a.fileBlob);
+              url = URL.createObjectURL(a.fileBlob);
             } else if (a.fileType === 'model' && a.thumbnailBlob) {
-              return URL.createObjectURL(a.thumbnailBlob);
+              url = URL.createObjectURL(a.thumbnailBlob);
             }
-            return '';
+            if (url) thumbnailUrlsRef.current.push(url);
+            return url;
           }).filter(Boolean);
           // Ensure id and name are always present
           return {
@@ -120,16 +137,21 @@ export default function HomePage() {
         // 확인 메시지
         const targetFolder = folders.find(f => f.id === targetFolderId);
         if (window.confirm(`'${targetFolder?.name}' 폴더로 이동하시겠습니까?`)) {
-          // [수정] UI에서 즉시 제거 (복사처럼 보이는 현상 방지)
+          // [UI 즉시 업데이트 1] 파일 리스트에서 제거
           setArchives(prev => prev.filter(a => a.id !== sourceArchiveId));
-          
+
+          // [UI 즉시 업데이트 2] 대상 폴더의 fileCount 증가
+          setFolders(prev => prev.map(f => 
+            f.id === targetFolderId 
+              ? { ...f, fileCount: (f.fileCount || 0) + 1 } 
+              : f
+          ));
+
           try {
             await archiveService.updateArchive(sourceArchiveId, { folderId: targetFolderId });
-            // 이동 후 전체 데이터 새로고침
-            await loadData();
           } catch (error) {
             console.error('Move failed', error);
-            loadData(); // 실패 시 롤백을 위해 다시 로드
+            loadData();
           }
         }
       }
@@ -144,18 +166,31 @@ export default function HomePage() {
       const targetFolderId = Number(destination.droppableId.replace('folder-drop-', ''));
       const sourceArchiveId = Number(draggableId.split('-')[1]);
       const targetFolder = folders.find(f => f.id === targetFolderId);
-      
       if (window.confirm(`'${targetFolder?.name}' 폴더로 이동하시겠습니까?`)) {
-        // [수정] UI에서 즉시 제거 (복사처럼 보이는 현상 방지)
         setArchives(prev => prev.filter(a => a.id !== sourceArchiveId));
-
+        setFolders(prev => prev.map(f => f.id === targetFolderId ? { ...f, fileCount: (f.fileCount || 0) + 1 } : f));
         try {
           await archiveService.updateArchive(sourceArchiveId, { folderId: targetFolderId });
-          // 이동 후 전체 데이터 새로고침
-          await loadData();
+          // If we're currently viewing this folder, refresh its contents and count
+          if (currentFolderId === targetFolderId) {
+            const inFolder = await archiveService.getAllArchives(targetFolderId);
+            setArchives(inFolder);
+            setCurrentFolderCount(inFolder.length);
+          } else {
+            // Otherwise refresh folder list counts
+            const folderData = await archiveService.getAllFolders();
+            const foldersWithCount = await Promise.all(folderData.map(async (f) => {
+              const fa = await archiveService.getAllArchives(f.id);
+              return {
+                id: f.id!, name: f.name!, fileCount: fa.length, thumbnails: fa.slice(0, 3).map(a => a.fileType === 'image' ? URL.createObjectURL(a.fileBlob) : a.thumbnailBlob ? URL.createObjectURL(a.thumbnailBlob) : '').filter(Boolean),
+                createdAt: f.createdAt, updatedAt: f.updatedAt,
+              };
+            }));
+            setFolders(foldersWithCount);
+          }
         } catch (err) {
           console.error('Move failed', err);
-          loadData(); // 실패 시 롤백을 위해 다시 로드
+          loadData();
         }
       }
       return;
@@ -198,41 +233,47 @@ export default function HomePage() {
       
       {/* 헤더 */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between"> {/* h-16 -> h-20으로 약간 높이 증가 */}
           <div className="flex items-center gap-4">
             {currentFolderId !== null ? (
               <button 
                 onClick={() => setCurrentFolderId(null)}
                 className="flex items-center gap-1 text-slate-500 hover:text-blue-600 font-bold transition-colors"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                 BACK
               </button>
             ) : (
               <div 
-                className="text-2xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent cursor-pointer" 
+                // [수정] 로고 크기 확대: text-2xl -> text-4xl
+                className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent cursor-pointer" 
                 onClick={() => setCurrentFolderId(null)}
               >
                 Curat3R
               </div>
             )}
           </div>
-          {/* 왼쪽: 편집모드/폴더추가, 오른쪽: 정렬/업로드 */}
+          
           <div className="flex flex-1 items-center justify-between">
             {/* 왼쪽 버튼 그룹 - 비워두기 */}
             <div></div>
             {/* 오른쪽 버튼 그룹 - 업로드 버튼만 */}
             <div className="flex items-center gap-4">
               <div className="inline-flex items-center gap-2 bg-transparent p-1 rounded-xl">
-                <Link href="/upload-3d" aria-label="3D 모델 생성" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-extrabold text-white shadow-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition-transform duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-400">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 2l8 4v8l-8 4-8-4V6l8-4zM12 8v8" /></svg>
+                {/* [수정] 3D 모델 생성 버튼 크기 확대 */}
+                {/* px-4 py-2 -> px-6 py-3 / text-sm -> text-base / rounded-xl -> rounded-2xl / icon w-4 -> w-5 */}
+                <Link href="/upload-3d" aria-label="3D 모델 생성" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-base font-extrabold text-white shadow-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition-transform duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-cyan-400">
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 2l8 4v8l-8 4-8-4V6l8-4zM12 8v8" /></svg>
                   <span>3D 모델 생성</span>
                 </Link>
 
-                <div className="w-px bg-slate-100 h-8 mx-2" />
+                {/* [수정] 구분선 높이 조정 */}
+                <div className="w-px bg-slate-100 h-10 mx-2" />
 
-                <Link href="/upload" aria-label="일반 업로드" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-indigo-600 bg-white border border-indigo-100 shadow-sm hover:scale-105 hover:shadow-md transition-transform duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-200">
-                  <svg className="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l4-4m-4 4l-4-4M21 12v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-6"/></svg>
+                {/* [수정] 일반 업로드 버튼 크기 확대 */}
+                {/* px-4 py-2 -> px-6 py-3 / text-sm -> text-base / rounded-xl -> rounded-2xl / icon w-4 -> w-5 */}
+                <Link href="/upload" aria-label="일반 업로드" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-base font-bold text-indigo-600 bg-white border border-indigo-100 shadow-sm hover:scale-105 hover:shadow-md transition-transform duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-200">
+                  <svg className="w-5 h-5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l4-4m-4 4l-4-4M21 12v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-6"/></svg>
                   <span>일반 업로드</span>
                 </Link>
               </div>
@@ -269,7 +310,6 @@ export default function HomePage() {
                >
                  오래된순 정렬
                </button>
-              {/* 편집 모드 제거: 드래그로 정렬하지 않음 (폴더로 이동만 허용) */}
              </div>
            </div>
         </div>
