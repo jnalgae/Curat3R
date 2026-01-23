@@ -47,7 +47,7 @@ PROMPTS_MAP = {
     ]
 }
 
-# Labels and reasons exposed to the frontend
+# --- 프론트엔드 노출용 레이블 및 사유 ---
 RESULTS_INFO = {
     0: ("[ 시 스 템 반 려 ]", "파일 데이터 손상 (로딩 중단/깨짐)", "👉 정상적인 이미지 파일이 아닙니다(손상/오류).", "파일"),
     1: ("[ 화 질 반 려 ]", "심한 흐림 또는 저해상도", "👉 사진이 너무 흐립니다. 초점을 맞추고 밝은 곳에서 다시 촬영해주세요.", "심한"),
@@ -58,7 +58,7 @@ RESULTS_INFO = {
 }
 
 
-# Precompute text embeddings
+# 텍스트 임베딩 미리 계산
 with torch.no_grad():
     encoded_prompts = {}
     for idx, sentences in PROMPTS_MAP.items():

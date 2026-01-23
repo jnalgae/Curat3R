@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Trellis 3D reconstruction runner script"""
+"""Trellis 3D 재구성 실행 스크립트"""
 import argparse
 import sys
 import json
@@ -14,17 +14,17 @@ if __name__ == "__main__":
         import os
         import subprocess
         import sys
-        # Set repository and script paths
+        # 경로 세팅
         trellis2_dir = "/workspace/tobigs/TRELLIS.2"
         trellis2_script = os.path.join(trellis2_dir, "trellis2_run.py")
         conda_prefix = "/workspace/tobigs/miniconda3"
         conda_env = "trellis311"
-        # Configure environment variables
+        # 환경 변수 세팅
         env = os.environ.copy()
         env["ATTN_BACKEND"] = "xformers"
         env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
         env["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-        # Hugging Face cache locations
+        # HuggingFace 캐시 경로
         hf_cache = "/workspace/tobigs/.hf_cache"
         os.makedirs(hf_cache, exist_ok=True)
         env["HF_HOME"] = hf_cache
@@ -32,12 +32,12 @@ if __name__ == "__main__":
         env["HF_DATASETS_CACHE"] = hf_cache
         env["HF_HUB_CACHE"] = hf_cache
         env["HUGGINGFACE_HUB_CACHE"] = hf_cache
-        # Pass through Hugging Face token from environment
+        # 토큰
         hf_token = env.get("HF_TOKEN") or env.get("HUGGINGFACE_HUB_TOKEN")
         env["HUGGINGFACE_HUB_TOKEN"] = hf_token
         env["HF_TOKEN"] = hf_token
 
-        # Use Python executable from the miniconda Trellis env
+        # miniconda 환경의 python을 직접 실행
         trellis_python = "/workspace/tobigs/miniconda3/envs/trellis311/bin/python"
         cmd = [
             trellis_python,
@@ -52,30 +52,30 @@ if __name__ == "__main__":
             print(result.stderr, file=sys.stderr)
             print(json.dumps({"success": False, "error": result.stderr}), file=sys.stderr)
             sys.exit(1)
-        # Return mesh.glb path on success
+        # mesh.glb 경로 반환
         glb_path = os.path.join(args.output_dir, "mesh.glb")
         print(json.dumps({"success": True, "mesh_path": glb_path}))
         with torch.cuda.device(device):
             out = pipe.run(img)
-
+        
         mesh = out[0] if isinstance(out, (list, tuple)) else out
-
+        
         print(f"[INFO] Inference complete. GPU Memory Used: {torch.cuda.memory_allocated(0) / 1024**3:.2f} GB", file=sys.stderr)
-
-        # Clear GPU memory before export
+        
+        # GPU 메모리 정리 (GLB 변환 전)
         print(f"[INFO] Clearing GPU cache for GLB export...", file=sys.stderr)
         torch.cuda.empty_cache()
         import gc
         gc.collect()
-
-        # Optionally simplify mesh if supported
+        
+        # Simplify mesh (더 적극적으로)
         if hasattr(mesh, "simplify"):
-            mesh.simplify(8388608)  # reduce target from 16M -> 8M
-
-        # Export GLB (memory-optimized settings)
+            mesh.simplify(8388608)  # 16M -> 8M (메모리 절약)
+        
+        # Export GLB
         os.makedirs(args.output_dir, exist_ok=True)
         glb_output = os.path.join(args.output_dir, "mesh.glb")
-
+        
         print(f"[INFO] Exporting GLB (memory-optimized settings)...", file=sys.stderr)
         glb = o_voxel.postprocess.to_glb(
             vertices=mesh.vertices,
@@ -85,15 +85,15 @@ if __name__ == "__main__":
             attr_layout=mesh.layout,
             voxel_size=mesh.voxel_size,
             aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-            decimation_target=500_000,  # 1M -> 500K
-            texture_size=2048,  # reduce from 4096 -> 2048
-            remesh=False,  # disable remesh
+            decimation_target=500_000,  # 1M -> 500K (메모리 절약)
+            texture_size=2048,  # 4096 -> 2048 (메모리 절약)
+            remesh=False,  # remesh 비활성화 (메모리 많이 사용)
             remesh_band=0,
             remesh_project=0,
             verbose=False
         )
         glb.export(glb_output, extension_webp=False)
-
+        
         print(json.dumps({"success": True, "mesh_path": glb_output}))
         
     except Exception as e:

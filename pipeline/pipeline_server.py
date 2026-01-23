@@ -1,4 +1,4 @@
-"""Pipeline server: CLIP filtering + StableFast3D 3D reconstruction"""
+"""통합 파이프라인 서버: CLIP 필터링 + SPAR3D 3D 재구성"""
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -14,9 +14,9 @@ app = Flask(__name__)
 CORS(app)
 
 CLIP_ENV = "/workspace/tobigs/pipeline_service/clip-env/bin/python"
-SF3D_ENV = "/workspace/tobigs/stable-fast-3d_server/stable-fast-3d-env/bin/python"
-SF3D_SCRIPT = "/workspace/tobigs/stable-fast-3d_server/stable-fast-3d/run.py"
-SF3D_LOCAL_MODEL = "/workspace/tobigs/pipeline_service/models/stabilityai_stable-fast-3d"
+SPAR3D_ENV = "/workspace/tobigs/sangwoo/miniconda3/envs/sangwoo-spar3d/bin/python"
+SPAR3D_SCRIPT = "/workspace/tobigs/sangwoo/stable-point-aware-3d/run.py"
+SPAR3D_DIR = "/workspace/tobigs/sangwoo/stable-point-aware-3d"
 TRELLIS_ENV = "/workspace/tobigs/miniconda3/envs/trellis311/bin/python"
 TRELLIS_SCRIPT = "/workspace/tobigs/pipeline_service/run_trellis.py"
 WORKSPACE_DIR = "/workspace/tobigs/pipeline_service/workspace"
@@ -28,7 +28,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def run_clip_filter_subprocess(image_path):
-    """Run CLIP filtering as a separate process (clip_filter.py)."""
+    """CLIP 필터링 실행 (clip_filter.py를 별도 프로세스로 실행)"""
     try:
         clip_runner = os.path.join(os.path.dirname(__file__), "clip_filter.py")
         result = subprocess.run(
@@ -53,59 +53,72 @@ def run_clip_filter_subprocess(image_path):
         print(f"[CLIP ERROR] {str(e)}", file=sys.stderr)
         return {"status": "error", "reasons": [f"CLIP 오류: {str(e)}"]}
 
-def run_stablefast3d(image_path, output_dir):
-    """Run StableFast3D 3D reconstruction (fast mode)."""
+def run_spar3d(image_path, output_dir):
+    """SPAR3D 3D 재구성 실행 (Fast 모드)"""
     try:
-        use_local_model = os.path.exists(os.path.join(SF3D_LOCAL_MODEL, "model.safetensors"))
-        
         cmd = [
-            SF3D_ENV, SF3D_SCRIPT, image_path,
+            SPAR3D_ENV, SPAR3D_SCRIPT, image_path,
             "--output-dir", output_dir,
             "--texture-resolution", "1024",
-            "--remesh_option", "none",
+            "--remesh_option", "triangle",
+            "--reduction_count_type", "vertex",
+            "--target_count", "50000",
             "--device", "cuda"
         ]
         
-        if use_local_model:
-            print(f"[INFO] Using local SF3D model (CUDA mode)", file=sys.stderr)
-            cmd.extend(["--pretrained-model", SF3D_LOCAL_MODEL])
-        
         env = os.environ.copy()
-        env["PYTHONPATH"] = "/workspace/tobigs/stable-fast-3d_server/stable-fast-3d"
+        env["PYTHONPATH"] = SPAR3D_DIR
         env["HF_HOME"] = "/workspace/tobigs/.hf_cache"
+        env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True,max_split_size_mb:128"
+        
+        # HuggingFace 토큰 설정
+        hf_token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_HUB_TOKEN")
+        env["HF_TOKEN"] = hf_token
+        env["HUGGINGFACE_HUB_TOKEN"] = hf_token
+        
+        print(f"[INFO] Starting SPAR3D (Fast mode)...", file=sys.stderr)
         
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=600,
-            cwd="/workspace/tobigs/stable-fast-3d_server/stable-fast-3d",
+            cwd=SPAR3D_DIR,
             env=env
         )
         
-        if result.returncode != 0:
-            if "GatedRepoError" in result.stderr or "401 Client Error" in result.stderr:
-                return {"success": False, "error": "StableFast3D 모델 필요 (./download_sf3d_model.sh 실행)"}
-            return {"success": False, "error": f"StableFast3D 실행 오류: {result.stderr[:200]}"}
+        print(f"[DEBUG] SPAR3D stdout: {result.stdout[:500]}", file=sys.stderr)
+        print(f"[DEBUG] SPAR3D stderr: {result.stderr[:500]}", file=sys.stderr)
+        print(f"[DEBUG] SPAR3D returncode: {result.returncode}", file=sys.stderr)
         
+        # 파일 생성 여부로 성공 판단 (run.py는 output_dir/0/mesh.glb 형식으로 저장)
         mesh_path = os.path.join(output_dir, "0", "mesh.glb")
         if os.path.exists(mesh_path):
+            print(f"[INFO] SPAR3D Success! Mesh file created: {mesh_path}", file=sys.stderr)
             return {"success": True, "mesh_path": mesh_path}
+        
+        # 파일이 없으면 실제 에러 확인
+        if result.returncode != 0:
+            if "GatedRepoError" in result.stderr or "401 Client Error" in result.stderr:
+                return {"success": False, "error": "SPAR3D 모델 필요 (Hugging Face 로그인 필요)"}
+            if "Traceback" in result.stderr or "Error" in result.stderr:
+                return {"success": False, "error": f"SPAR3D 실행 오류: {result.stderr[:300]}"}
+        
         return {"success": False, "error": "3D 모델 파일이 생성되지 않았습니다"}
         
     except subprocess.TimeoutExpired:
-        return {"success": False, "error": "StableFast3D 실행 시간 초과 (10분)"}
+        return {"success": False, "error": "SPAR3D 실행 시간 초과 (10분)"}
     except Exception as e:
-        return {"success": False, "error": f"StableFast3D 오류: {str(e)}"}
+        return {"success": False, "error": f"SPAR3D 오류: {str(e)}"}
 
 def run_trellis(image_path, output_dir):
-    """Run Trellis 3D reconstruction (quality mode)."""
+    """Trellis 3D 재구성 실행 (Quality 모드)"""
     try:
         trellis_runner = os.path.join(os.path.dirname(__file__), "run_trellis.py")
-        # Set this to the actual Trellis working directory (e.g., /workspace/tobigs/TRELLIS.2)
+        # 실제 Trellis 작업 디렉토리(/workspace/tobigs/TRELLIS.2)로 변경
         trellis_workdir = "/workspace/tobigs/TRELLIS.2"
         if not os.path.exists(trellis_workdir):
-            return {"success": False, "error": "Trellis not installed. Please use Fast mode (StableFast3D) instead."}
+            return {"success": False, "error": "Trellis not installed. Please use Fast mode (SPAR3D) instead."}
 
         cmd = [
             TRELLIS_ENV,
@@ -114,12 +127,12 @@ def run_trellis(image_path, output_dir):
             "--output_dir", output_dir
         ]
 
-        # Set GPU-related environment variables
+        # GPU 환경 변수 설정
         env = os.environ.copy()
         env["CUDA_VISIBLE_DEVICES"] = "0"
         env["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
         env["ATTN_BACKEND"] = "xformers"
-        # Pass HuggingFace token from environment variables
+        # HuggingFace 토큰 전달 (환경 변수에서 가져오기)
         if "HF_TOKEN" in os.environ:
             env["HF_TOKEN"] = os.environ["HF_TOKEN"]
         if "HUGGINGFACE_HUB_TOKEN" in os.environ:
@@ -135,7 +148,7 @@ def run_trellis(image_path, output_dir):
             cmd,
             capture_output=True,
             text=True,
-            timeout=1800,  # 30-minute timeout (Trellis can be slow)
+            timeout=1800,  # 30분 타임아웃 (Trellis는 시간이 오래 걸림)
             cwd=trellis_workdir,
             env=env
         )
@@ -152,7 +165,7 @@ def run_trellis(image_path, output_dir):
         # Parse JSON output
         try:
             output = result.stdout.strip()
-            # Find JSON in the last stdout lines (may be mixed with logs)
+            # stdout의 마지막 줄에서 JSON 찾기 (로그와 섞여있을 수 있음)
             lines = output.split('\n')
             json_line = None
             for line in reversed(lines):
@@ -167,11 +180,11 @@ def run_trellis(image_path, output_dir):
                     return {"success": False, "error": trellis_result.get("error", "Trellis 실행 실패")}
                 return trellis_result
             else:
-                # If JSON not found, check for mesh.glb file
+                # JSON을 찾을 수 없으면 mesh.glb 파일 존재 확인
                 mesh_path = os.path.join(output_dir, "mesh.glb")
                 if os.path.exists(mesh_path):
                     return {"success": True, "mesh_path": mesh_path}
-                return {"success": False, "error": "Trellis result not found"}
+                return {"success": False, "error": "Trellis 결과를 찾을 수 없습니다"}
                 
         except json.JSONDecodeError as e:
             print(f"[ERROR] JSON decode error: {e}", file=sys.stderr)
@@ -192,12 +205,12 @@ def health_check():
 
 @app.route('/api/reconstruct/<task_id>', methods=['POST'])
 def reconstruct_only(task_id):
-    """Reconstruct only (skip filtering)."""
+    """필터링 건너뛰고 3D 재구성만 수행"""
     task_dir = os.path.join(WORKSPACE_DIR, task_id)
     if not os.path.exists(task_dir):
         return jsonify({"error": "작업을 찾을 수 없습니다"}), 404
     
-    # Model selection (fast/quality)
+    # 모델 선택 (fast/quality)
     model_type = request.json.get('model', 'fast') if request.is_json else 'fast'
     
     try:
@@ -211,11 +224,11 @@ def reconstruct_only(task_id):
         output_dir = os.path.join(task_dir, f"{model_type}_output")
         os.makedirs(output_dir, exist_ok=True)
         
-        # Model selection (fast/quality)
+        # 모델 선택
         if model_type == 'quality':
             result = run_trellis(image_path, output_dir)
-        else:  # fast (default)
-            result = run_stablefast3d(image_path, output_dir)
+        else:  # fast (기본값)
+            result = run_spar3d(image_path, output_dir)
         
         print(f"[DEBUG] Result from {model_type}: {result}", file=sys.stderr)
         
@@ -254,7 +267,7 @@ def reconstruct_only(task_id):
 
 @app.route('/api/filter', methods=['POST'])
 def filter_image():
-    """Filter an image only."""
+    """이미지 필터링만 수행"""
     if 'image' not in request.files:
         return jsonify({"error": "이미지 파일이 필요합니다"}), 400
     
@@ -265,18 +278,18 @@ def filter_image():
     if not allowed_file(file.filename):
         return jsonify({"error": "지원하지 않는 파일 형식입니다"}), 400
     
-    # Create temporary task directory
+    # 임시 디렉토리 생성
     task_id = str(uuid.uuid4())
     task_dir = os.path.join(WORKSPACE_DIR, task_id)
     os.makedirs(task_dir, exist_ok=True)
     
     try:
-        # Save uploaded file
+        # 파일 저장
         filename = secure_filename(file.filename)
         image_path = os.path.join(task_dir, filename)
         file.save(image_path)
         
-        # Run CLIP filtering
+        # CLIP 필터링 실행
         filter_result = run_clip_filter_subprocess(image_path)
         
         return jsonify({
@@ -285,13 +298,13 @@ def filter_image():
         })
         
     except Exception as e:
-        # On error, remove temporary task directory
+        # 에러 발생 시 임시 디렉토리 삭제
         shutil.rmtree(task_dir, ignore_errors=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/process', methods=['POST'])
 def process_image():
-    """Run full pipeline: filtering + 3D reconstruction."""
+    """전체 파이프라인 수행: 필터링 + 3D 재구성"""
     if 'image' not in request.files:
         return jsonify({"error": "이미지 파일이 필요합니다"}), 400
     
@@ -302,23 +315,23 @@ def process_image():
     if not allowed_file(file.filename):
         return jsonify({"error": "지원하지 않는 파일 형식입니다"}), 400
     
-    # Create temporary task directory
+    # 임시 디렉토리 생성
     task_id = str(uuid.uuid4())
     task_dir = os.path.join(WORKSPACE_DIR, task_id)
     os.makedirs(task_dir, exist_ok=True)
     
     try:
-        # Save uploaded file
+        # 파일 저장
         filename = secure_filename(file.filename)
         image_path = os.path.join(task_dir, filename)
         file.save(image_path)
         
-        # Step 1: CLIP filtering
+        # 1단계: CLIP 필터링
         print(f"[INFO] Starting CLIP filtering for task {task_id}", file=sys.stderr)
         filter_result = run_clip_filter_subprocess(image_path)
         print(f"[INFO] CLIP result: {filter_result}", file=sys.stderr)
         
-        # If not accepted, do not proceed to reconstruction
+        # accept가 아니면 3D 재구성 하지 않음
         if filter_result.get("status") != "accept":
             print(f"[INFO] Image rejected at filtering stage: {filter_result.get('status')}", file=sys.stderr)
             return jsonify({
@@ -328,43 +341,44 @@ def process_image():
                 "message": "이미지가 필터링을 통과하지 못했습니다"
             })
         
-        # Step 2: StableFast3D reconstruction
-        print(f"[INFO] Starting StableFast3D reconstruction for task {task_id}", file=sys.stderr)
-        sf3d_output_dir = os.path.join(task_dir, "sf3d_output")
-        os.makedirs(sf3d_output_dir, exist_ok=True)
+        # 2단계: SPAR3D 3D 재구성
+        print(f"[INFO] Starting SPAR3D reconstruction for task {task_id}", file=sys.stderr)
+        spar3d_output_dir = os.path.join(task_dir, "spar3d_output")
+        os.makedirs(spar3d_output_dir, exist_ok=True)
         
-        sf3d_result = run_stablefast3d(image_path, sf3d_output_dir)
-        print(f"[INFO] StableFast3D result: {sf3d_result}", file=sys.stderr)
+        spar3d_result = run_spar3d(image_path, spar3d_output_dir)
+        print(f"[INFO] SPAR3D result: {spar3d_result}", file=sys.stderr)
         
-        if not sf3d_result["success"]:
+        if not spar3d_result["success"]:
             return jsonify({
                 "task_id": task_id,
                 "stage": "reconstruction",
                 "filter_result": filter_result,
-                "reconstruction_error": sf3d_result["error"]
+                "reconstruction_error": spar3d_result["error"]
             }), 500
         
-        # Success
+        # 성공
         return jsonify({
             "task_id": task_id,
             "stage": "completed",
             "filter_result": filter_result,
-            "mesh_path": sf3d_result["mesh_path"],
+            "mesh_path": spar3d_result["mesh_path"],
             "message": "3D 재구성이 완료되었습니다"
         })
         
     except Exception as e:
-        # On error, remove temporary task directory
+        # 에러 발생 시 임시 디렉토리 삭제
         shutil.rmtree(task_dir, ignore_errors=True)
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/download/<task_id>', methods=['GET'])
 def download_model(task_id):
-    """Download generated 3D model."""
-    # fast_output 또는 quality_output 또는 sf3d_output(레거시) 경로 시도
+    """생성된 3D 모델 다운로드"""
+    # fast_output(SPAR3D) 또는 quality_output(Trellis) 또는 spar3d_output/sf3d_output(레거시) 경로 시도
     possible_paths = [
         os.path.join(WORKSPACE_DIR, task_id, "fast_output", "0", "mesh.glb"),
         os.path.join(WORKSPACE_DIR, task_id, "quality_output", "mesh.glb"),
+        os.path.join(WORKSPACE_DIR, task_id, "spar3d_output", "0", "mesh.glb"),
         os.path.join(WORKSPACE_DIR, task_id, "sf3d_output", "0", "mesh.glb"),
     ]
     
@@ -386,7 +400,7 @@ def download_model(task_id):
 
 @app.route('/api/cleanup/<task_id>', methods=['DELETE'])
 def cleanup_task(task_id):
-    """Cleanup task directory."""
+    """작업 디렉토리 정리"""
     task_dir = os.path.join(WORKSPACE_DIR, task_id)
     
     if os.path.exists(task_dir):
